@@ -4,7 +4,7 @@ from components import array_op
 from collections import namedtuple
 
 Point = namedtuple("Point", ['x', 'y'])
-
+Face = namedtuple("Face", ['image', 'x', 'y', 'width', 'height'])
 # get the first camera
 cap = cv2.VideoCapture(0)
 
@@ -23,9 +23,6 @@ print(1)
 # get the source frame
 success, frame = cap.read()
 
-# to Gray
-img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
 while success:
 
     # get new frame and the frame size
@@ -39,34 +36,45 @@ while success:
 
     # get the result
     face_rectangles = face_cascade.detectMultiScale(image, 1.1, 5)
-    left_eye_rectangles = left_eye_cascade.detectMultiScale(image, 1.17, 12)
-    right_eye_rectangles = right_eye_cascade.detectMultiScale(image, 1.17,12)
-
-    eye_rectangles = array_op.mosaic_array(
-        left_eye_rectangles, right_eye_rectangles)
+    faces = list()
     filtered_eye_rectangles = list()
 
-    # Ensure eyes are always on the upper side of the horizontal middle line
-    # of the face
-    if len(face_rectangles) > 0 and len(eye_rectangles) > 0:
-        for eye in eye_rectangles:
-            x, y, w, h = eye
-            mid_point = Point(int(x + (w / 2)), int(y + (h / 2)))
+    for face in face_rectangles:
+        fx, fy, fw, fh = face
+        cut = Face(image[fy:fy + fh, fx:fx + fw], fx, fy, fw, fh)
+        faces.append(cut)
 
-            hold_eye = False
-            for face in face_rectangles:
+    index = 0
+    for now_face in faces:
+        assert isinstance(now_face, Face)
+        cv2.imshow("Face" + str(index), now_face.image)  # 显示图像
+        index += 1
 
-                fx, fy, fw, fh = face
-                if fx < mid_point.x < (
-                        fx +
-                        fw) and fy < mid_point.y < (
-                        fy +
-                        fh):
-                    if mid_point.y <= int(fy + (fh / 2)):
+        left_eye_rectangles = left_eye_cascade.detectMultiScale(
+            now_face.image, 1.17, 12)
+        right_eye_rectangles = right_eye_cascade.detectMultiScale(
+            now_face.image, 1.17, 12)
+
+        eye_rectangles = array_op.mosaic_array(
+            left_eye_rectangles, right_eye_rectangles)
+
+        # Ensure eyes are always on the upper side of the horizontal middle line
+        # of the face
+        if len(eye_rectangles) > 0:
+            for eye in eye_rectangles:
+                x, y, w, h = eye
+                mid_point = Point(int(x + (w / 2)), int(y + (h / 2)))
+
+                hold_eye = False
+                for face in face_rectangles:
+
+                    fx, fy, fw, fh = face
+                    if mid_point.y <= int(now_face.height / 2):
                         hold_eye = True
 
-            if hold_eye:
-                filtered_eye_rectangles.append(eye)
+                if hold_eye:
+                    eye = [x + now_face.x, y + now_face.y, w, h]
+                    filtered_eye_rectangles.append(eye)
 
     # simplify operations to a function
     def draw_result_rectangles(input_image, color, rectangles):
