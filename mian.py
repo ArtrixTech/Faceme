@@ -19,7 +19,7 @@ pupil_color = (180, 200, 0)
 face_cascade = cv2.CascadeClassifier("face.xml")
 eye_cascade = cv2.CascadeClassifier("eye.xml")
 
-main_face = ""
+main_face = None
 
 # get the source frame
 success, frame = cap.read()
@@ -91,25 +91,27 @@ while success:
     eye_drawn = draw_result_rectangles(
         face_drawn, eye_color, filtered_eye_rectangles, True)
 
-    im = Image.fromarray(eye_drawn)
-    emo = facepp_api.analyze_face(main_face.image, "emotion")
-    if not emo == False and isinstance(emo, dict):
-        emo = facepp_api.analyze_face(main_face.image, "emotion")["emotion"]
-        max_rate = 0
-        max_key = ""
-        print(emo)
-        for key in emo:
-            value = int(emo[key])
-            if value > max_rate:
-                max_key = key
-                max_rate = value
+    if main_face:
+        im = Image.fromarray(eye_drawn)
+        emo = facepp_api.analyze_face(main_face.image, "emotion")
+        if not emo == False and isinstance(emo, dict):
+            emo = facepp_api.analyze_face(main_face.image, "emotion")["emotion"]
+            max_rate = 0
+            max_key = ""
+            print(emo)
+            for key in emo:
+                value = int(emo[key])
+                if value > max_rate:
+                    max_key = key
+                    max_rate = value
 
-        font = ImageFont.truetype('font.otf', 20)
-        draw = ImageDraw.Draw(im)
-        x, y = (main_face.x, main_face.y - 20)
-        draw.text((x, y), max_key, font=font, fill=(119, 85, 0))
+            font = ImageFont.truetype('font.otf', 20)
+            draw = ImageDraw.Draw(im)
+            x, y = (main_face.x, main_face.y - 20)
+            draw.text((x, y), max_key, font=font, fill=(119, 85, 0))
+            eye_drawn=np.array(im)
 
-    cv2.imshow("Face", np.array(im))  # 显示图像
+    cv2.imshow("Face", eye_drawn) # 显示图像
 
     key = cv2.waitKey(10)
     c = chr(key & 255)
