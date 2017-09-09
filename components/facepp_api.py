@@ -20,11 +20,9 @@ def get_face_token(numpy_img_arr):
         "return_landmark": "0",
         "image_base64": functions.img_to_base64(
             numpy_img_arr,
-            is_numpy_img_array=True),
-        "return_attributes": "gender,age"}
+            is_numpy_img_array=True)}
     response = requests.post(detect_url, data=data).json()["faces"][0]
     token = response["face_token"]
-    age = response["attributes"]["age"]["value"]
     return token
 
 
@@ -66,7 +64,6 @@ def analyze_face(numpy_img_arr, attributes_str):
         "return_attributes": attributes_str}
     try:
         response = requests.post(detect_url, data=data).json()
-
     except KeyError:
         return False
     except IndexError:

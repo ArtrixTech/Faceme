@@ -2,8 +2,8 @@ import cv2
 import numpy as np
 from PIL import Image, ImageFont, ImageDraw
 from components import facepp_api
-from debuging.timer import Timer
 from collections import namedtuple
+
 
 Point = namedtuple("Point", ['x', 'y'])
 Face = namedtuple("Face", ['image', 'x', 'y', 'width', 'height'])
@@ -50,7 +50,7 @@ while success:
         # get every face and do comparison with face++ API
         assert isinstance(now_face, Face)
         nf = now_face
-        now_face = Face(cv2.resize(nf.image, (128, 128)),
+        now_face = Face(cv2.resize(nf.image, (256, 256)),
                         nf.x, nf.y, nf.width, nf.height)
         main_face = now_face
         cv2.imshow("Face" + str(index), now_face.image)  # 显示图像
@@ -92,7 +92,6 @@ while success:
     eye_drawn = draw_result_rectangles(
         face_drawn, eye_color, filtered_eye_rectangles, True)
 
-    t = Timer()
     if main_face:
         im = Image.fromarray(eye_drawn)
         emo = facepp_api.analyze_face(main_face.image, "emotion")
@@ -112,7 +111,6 @@ while success:
             x, y = (main_face.x, main_face.y - 20)
             draw.text((x, y), max_key, font=font, fill=(119, 85, 0))
             eye_drawn = np.array(im)
-
     cv2.imshow("Face", eye_drawn)  # 显示图像
 
     key = cv2.waitKey(10)
