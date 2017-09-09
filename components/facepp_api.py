@@ -12,7 +12,7 @@ compare_url = "https://api-cn.faceplusplus.com/facepp/v3/compare"
 model_token = "a7edb56f8386d7f826be350a2f55d44e"
 
 
-def get_face(numpy_img_arr):
+def get_face_token(numpy_img_arr):
 
     data = {
         "api_key": API_KEY,
@@ -25,12 +25,12 @@ def get_face(numpy_img_arr):
     response = requests.post(detect_url, data=data).json()["faces"][0]
     token = response["face_token"]
     age = response["attributes"]["age"]["value"]
-    return token, age
+    return token
 
 
 def create_face(numpy_img_arr):
 
-    token, age = get_face(numpy_img_arr)
+    token, age = get_face_token(numpy_img_arr)
 
     data = {
         "api_key": API_KEY,
@@ -52,3 +52,25 @@ def compare_face(numpy_img_arr, compare_face_token):
         "face_token1": compare_face_token}
     response = requests.post(compare_url, data=data).json()
     print(response["confidence"])
+
+
+def analyze_face(numpy_img_arr, attributes_str):
+
+    data = {
+        "api_key": API_KEY,
+        "api_secret": API_SECRET,
+        "return_landmark": "0",
+        "image_base64": functions.img_to_base64(
+            numpy_img_arr,
+            is_numpy_img_array=True),
+        "return_attributes": attributes_str}
+    try:
+        response = requests.post(detect_url, data=data).json()["faces"][0]
+    except KeyError:
+        return False
+    except IndexError:
+        return False
+    except requests.exceptions.ConnectionError:
+        return False
+    attr = response["attributes"]
+    return attr

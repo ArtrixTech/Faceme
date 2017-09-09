@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 from components import functions
+from PIL import Image, ImageFont, ImageDraw
 from components import facepp_api
 from collections import namedtuple
 
@@ -19,7 +20,7 @@ pupil_color = (180, 200, 0)
 face_cascade = cv2.CascadeClassifier("face.xml")
 eye_cascade = cv2.CascadeClassifier("eye.xml")
 
-main_face=""
+main_face = ""
 
 # get the source frame
 success, frame = cap.read()
@@ -31,9 +32,7 @@ while success:
     size = frame.shape[:2]
 
     # to Gray
-    image = frame  # cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-    # cv2.equalizeHist(image, image)  # 灰度图像进行直方图等距化
+    image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # get the result
     face_rectangles = face_cascade.detectMultiScale(image, 1.22, 10)
@@ -50,13 +49,14 @@ while success:
 
         # get every face and do comparison with face++ API
         assert isinstance(now_face, Face)
-        # facepp_api.compare_face(now_face.image, facepp_api.model_token)
-        main_face=now_face.image
+        nf = now_face
+        now_face = Face(cv2.resize(nf.image,(128,128)),nf.x,nf.y,nf.width,nf.height)
+        main_face = now_face
         cv2.imshow("Face" + str(index), now_face.image)  # 显示图像
         index += 1
 
-        eye_rectangles = eye_cascade.detectMultiScale(
-            now_face.image, 1.07, 10)
+        eye_rectangles = ""
+        # eye_cascade.detectMultiScale(now_face.image, 1.07, 10)
 
         # Ensure eyes are always on the upper side of the horizontal middle line
         # of the face
@@ -91,15 +91,33 @@ while success:
     eye_drawn = draw_result_rectangles(
         face_drawn, eye_color, filtered_eye_rectangles, True)
 
-    cv2.imshow("Face Detection", eye_drawn)  # 显示图像
+    im = Image.fromarray(eye_drawn)
+    emo = facepp_api.analyze_face(main_face.image, "emotion")
+    if not emo == False and isinstance(emo, dict):
+        emo = facepp_api.analyze_face(main_face.image, "emotion")["emotion"]
+        max_rate = 0
+        max_key = ""
+        print(emo)
+        for key in emo:
+            value = int(emo[key])
+            if value > max_rate:
+                max_key = key
+                max_rate = value
+
+        font = ImageFont.truetype('font.otf', 20)
+        draw = ImageDraw.Draw(im)
+        x, y = (main_face.x, main_face.y - 20)
+        draw.text((x, y), max_key, font=font, fill=(119, 85, 0))
+
+    cv2.imshow("Face", np.array(im))  # 显示图像
 
     key = cv2.waitKey(10)
     c = chr(key & 255)
     if c in ['q', 'Q', chr(27)]:
         break
     if c in ['e', 'E', chr(69)]:
-        print(facepp_api.create_face(main_face))
+        print(facepp_api.create_face(main_face.image))
     if c in ['c', 'c', chr(70)]:
-        facepp_api.compare_face(main_face, facepp_api.model_token)
+        facepp_api.compare_face(main_face.image, facepp_api.model_token)
 
 cv2.destroyAllWindows()
