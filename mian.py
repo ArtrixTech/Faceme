@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
-from components import array_op
+from components import functions
+from components import facepp_api
 from collections import namedtuple
 
 Point = namedtuple("Point", ['x', 'y'])
@@ -18,8 +19,7 @@ pupil_color = (180, 200, 0)
 face_cascade = cv2.CascadeClassifier("face.xml")
 eye_cascade = cv2.CascadeClassifier("eye.xml")
 
-
-print(1)
+main_face=""
 
 # get the source frame
 success, frame = cap.read()
@@ -31,7 +31,7 @@ while success:
     size = frame.shape[:2]
 
     # to Gray
-    image = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    image = frame  # cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
     # cv2.equalizeHist(image, image)  # 灰度图像进行直方图等距化
 
@@ -42,12 +42,16 @@ while success:
 
     for face in face_rectangles:
         fx, fy, fw, fh = face
-        cut = Face(image[fy:fy +int(fh*1), fx:fx+fw], fx, fy, fw, fh)
+        cut = Face(image[fy:fy + int(fh * 1), fx:fx + fw], fx, fy, fw, fh)
         faces.append(cut)
 
     index = 0
     for now_face in faces:
+
+        # get every face and do comparison with face++ API
         assert isinstance(now_face, Face)
+        # facepp_api.compare_face(now_face.image, facepp_api.model_token)
+        main_face=now_face.image
         cv2.imshow("Face" + str(index), now_face.image)  # 显示图像
         index += 1
 
@@ -73,19 +77,19 @@ while success:
                     filtered_eye_rectangles.append(eye)
 
     # simplify operations to a function
-    def draw_result_rectangles(input_image, color, rectangles,is_eye=False):
+    def draw_result_rectangles(input_image, color, rectangles, is_eye=False):
         if len(rectangles) > 0:
             for rect in rectangles:
                 x, y, w, h = rect
                 cv2.rectangle(input_image, (x, y), (x + w, y + h), color)
                 if is_eye:
                     pupil_point = Point(int(x + (w / 2)), int(y + (h / 2)))
-                    cv2.circle(input_image,pupil_point,1, pupil_color,5)
+                    cv2.circle(input_image, pupil_point, 1, pupil_color, 5)
         return input_image
 
     face_drawn = draw_result_rectangles(frame, face_color, face_rectangles)
     eye_drawn = draw_result_rectangles(
-        face_drawn, eye_color, filtered_eye_rectangles,True)
+        face_drawn, eye_color, filtered_eye_rectangles, True)
 
     cv2.imshow("Face Detection", eye_drawn)  # 显示图像
 
@@ -93,5 +97,9 @@ while success:
     c = chr(key & 255)
     if c in ['q', 'Q', chr(27)]:
         break
+    if c in ['e', 'E', chr(69)]:
+        print(facepp_api.create_face(main_face))
+    if c in ['c', 'c', chr(70)]:
+        facepp_api.compare_face(main_face, facepp_api.model_token)
 
 cv2.destroyAllWindows()
