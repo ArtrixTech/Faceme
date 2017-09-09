@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-from components import functions
 from PIL import Image, ImageFont, ImageDraw
 from components import facepp_api
 from collections import namedtuple
@@ -50,7 +49,8 @@ while success:
         # get every face and do comparison with face++ API
         assert isinstance(now_face, Face)
         nf = now_face
-        now_face = Face(cv2.resize(nf.image,(128,128)),nf.x,nf.y,nf.width,nf.height)
+        now_face = Face(cv2.resize(nf.image, (128, 128)),
+                        nf.x, nf.y, nf.width, nf.height)
         main_face = now_face
         cv2.imshow("Face" + str(index), now_face.image)  # 显示图像
         index += 1
