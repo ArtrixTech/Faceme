@@ -1,4 +1,6 @@
-import numpy,os,base64
+import numpy
+import os
+import base64
 from PIL import Image
 
 
@@ -20,12 +22,12 @@ def img_to_base64(input_img, is_numpy_img_array=False):
 
     if not is_numpy_img_array:
         with open(input_img, mode="rb") as img:
-            b64 = base64.b64encode(input_img.read())
+            b64 = base64.b64encode(img.read())
         return b64
     else:
         img = Image.fromarray(input_img)
         img.save("temp_img.jpg")
-        with open("temp_img.jpg",mode="rb") as file:
-            b64=base64.b64encode(file.read())
+        with open("temp_img.jpg", mode="rb") as file:
+            b64 = base64.b64encode(file.read())
         os.remove("temp_img.jpg")
         return b64

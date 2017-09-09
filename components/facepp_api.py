@@ -1,8 +1,6 @@
 import requests
-import numpy
-from PIL import Image
 from components import functions
-import json
+
 
 API_KEY = 'az6lgs_zGjW1xhWK__ru6CMx_brdNHpK'
 API_SECRET = 'PvVHpOw0cCu4NoAJr-fT0kCklu5hprcX'
@@ -11,7 +9,7 @@ detect_url = "https://api-cn.faceplusplus.com/facepp/v3/detect"
 face_set_url = "https://api-cn.faceplusplus.com/facepp/v3/faceset/create"
 compare_url = "https://api-cn.faceplusplus.com/facepp/v3/compare"
 
-model_token="a7edb56f8386d7f826be350a2f55d44e"
+model_token = "a7edb56f8386d7f826be350a2f55d44e"
 
 
 def get_face(numpy_img_arr):
@@ -44,11 +42,13 @@ def create_face(numpy_img_arr):
     return token, faceset_token
 
 
-def compare_face(numpy_img_arr,compare_face_token):
+def compare_face(numpy_img_arr, compare_face_token):
     data = {
         "api_key": API_KEY,
         "api_secret": API_SECRET,
-        "image_base64_2": functions.img_to_base64(numpy_img_arr,is_numpy_img_array=True),
+        "image_base64_2": functions.img_to_base64(
+            numpy_img_arr,
+            is_numpy_img_array=True),
         "face_token1": compare_face_token}
     response = requests.post(compare_url, data=data).json()
     print(response["confidence"])
