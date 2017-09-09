@@ -65,12 +65,13 @@ def analyze_face(numpy_img_arr, attributes_str):
             is_numpy_img_array=True),
         "return_attributes": attributes_str}
     try:
-        response = requests.post(detect_url, data=data).json()["faces"][0]
+        response = requests.post(detect_url, data=data).json()
+
     except KeyError:
         return False
     except IndexError:
         return False
     except requests.exceptions.ConnectionError:
         return False
-    attr = response["attributes"]
+    attr = response["faces"][0]["attributes"]
     return attr

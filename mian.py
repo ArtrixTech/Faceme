@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from PIL import Image, ImageFont, ImageDraw
 from components import facepp_api
+from debuging.timer import Timer
 from collections import namedtuple
 
 Point = namedtuple("Point", ['x', 'y'])
@@ -91,12 +92,12 @@ while success:
     eye_drawn = draw_result_rectangles(
         face_drawn, eye_color, filtered_eye_rectangles, True)
 
+    t = Timer()
     if main_face:
         im = Image.fromarray(eye_drawn)
         emo = facepp_api.analyze_face(main_face.image, "emotion")
-        if not emo == False and isinstance(emo, dict):
-            emo = facepp_api.analyze_face(
-                main_face.image, "emotion")["emotion"]
+        if emo and isinstance(emo, dict):
+            emo = emo["emotion"]
             max_rate = 0
             max_key = ""
             print(emo)
