@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image, ImageFont, ImageDraw
 from components import facepp_api
 from collections import namedtuple
+import win32api,win32con
 
 
 Point = namedtuple("Point", ['x', 'y'])
@@ -118,9 +119,15 @@ while success:
     if c in ['q', 'Q', chr(27)]:
         break
     if c in ['e', 'E', chr(69)]:
-        print(facepp_api.create_face(main_face.image))
+        if main_face:
+            print(facepp_api.create_face(main_face.image))
+        else:
+            win32api.MessageBox(0, "没有找到可用人脸", "错误", win32con.MB_OK)
     if c in ['c', 'c', chr(70)]:
-        facepp_api.compare_face(main_face.image, facepp_api.model_token)
+        if main_face:
+            facepp_api.compare_face(main_face.image, facepp_api.model_token)
+        else:
+            win32api.MessageBox(0, "没有找到可用人脸", "错误", win32con.MB_OK)
     main_face = False
 
 cv2.destroyAllWindows()
