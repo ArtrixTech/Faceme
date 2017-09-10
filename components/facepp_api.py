@@ -70,5 +70,7 @@ def analyze_face(numpy_img_arr, attributes_str):
         return False
     except requests.exceptions.ConnectionError:
         return False
-    attr = response["faces"][0]["attributes"]
-    return attr
+    if len(response["faces"]) > 0:
+        attr = response["faces"][0]["attributes"]
+        return attr
+    return False

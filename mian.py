@@ -121,5 +121,6 @@ while success:
         print(facepp_api.create_face(main_face.image))
     if c in ['c', 'c', chr(70)]:
         facepp_api.compare_face(main_face.image, facepp_api.model_token)
+    main_face = False
 
 cv2.destroyAllWindows()
