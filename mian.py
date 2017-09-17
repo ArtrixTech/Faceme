@@ -5,6 +5,7 @@ from components import facepp_api
 from collections import namedtuple
 import win32api
 import win32con
+from components.thread_rebuild import ReThread
 
 
 Point = namedtuple("Point", ['x', 'y'])
@@ -29,8 +30,25 @@ success, frame = cap.read()
 tick = 0
 emotion = ""
 
-def detect_face_emotion(image,argument):
+public_thread = None
 
+
+def detect_face_emotion(image, argument):
+
+    emo = facepp_api.analyze_face(main_face.image, "emotion")
+
+    if emo and isinstance(emo, dict):
+        emo = emo["emotion"]
+        max_rate = 0
+        max_key = ""
+        print(emo)
+        for key in emo:
+            value = int(emo[key])
+            if value > max_rate:
+                max_key = key
+                max_rate = value
+
+        return max_key
 
 
 while success:
@@ -103,26 +121,14 @@ while success:
     if main_face and tick == 5:
 
         im = Image.fromarray(eye_drawn)
-        emo = facepp_api.analyze_face(main_face.image, "emotion")
+        public_thread = ReThread(
+            detect_face_emotion, args=(
+                main_face.image, "emotion",))
+        public_thread.run()
 
-        if emo and isinstance(emo, dict):
-            emo = emo["emotion"]
-            max_rate = 0
-            max_key = ""
-            print(emo)
-            for key in emo:
-                value = int(emo[key])
-                if value > max_rate:
-                    max_key = key
-                    max_rate = value
-
-            emotion = max_key
-            font = ImageFont.truetype('font.otf', 20)
-            draw = ImageDraw.Draw(im)
-            x, y = (main_face.x, main_face.y - 20)
-            draw.text((x, y), max_key, font=font, fill=(119, 85, 0))
-            eye_drawn = np.array(im)
     elif main_face:
+        if public_thread:
+            emotion = public_thread.get_result()
         im = Image.fromarray(eye_drawn)
         font = ImageFont.truetype('font.otf', 20)
         draw = ImageDraw.Draw(im)
