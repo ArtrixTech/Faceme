@@ -118,7 +118,7 @@ while success:
     eye_drawn = draw_result_rectangles(
         face_drawn, eye_color, filtered_eye_rectangles, True)
 
-    if main_face and tick == 5:
+    if main_face and tick == 2:
 
         im = Image.fromarray(eye_drawn)
         public_thread = ReThread(
