@@ -3,7 +3,8 @@ import numpy as np
 from PIL import Image, ImageFont, ImageDraw
 from components import facepp_api
 from collections import namedtuple
-import win32api,win32con
+import win32api
+import win32con
 
 
 Point = namedtuple("Point", ['x', 'y'])
@@ -25,6 +26,12 @@ main_face = None
 
 # get the source frame
 success, frame = cap.read()
+tick = 0
+emotion = ""
+
+def detect_face_emotion(image,argument):
+
+
 
 while success:
 
@@ -93,9 +100,11 @@ while success:
     eye_drawn = draw_result_rectangles(
         face_drawn, eye_color, filtered_eye_rectangles, True)
 
-    if main_face:
+    if main_face and tick == 5:
+
         im = Image.fromarray(eye_drawn)
         emo = facepp_api.analyze_face(main_face.image, "emotion")
+
         if emo and isinstance(emo, dict):
             emo = emo["emotion"]
             max_rate = 0
@@ -107,11 +116,24 @@ while success:
                     max_key = key
                     max_rate = value
 
+            emotion = max_key
             font = ImageFont.truetype('font.otf', 20)
             draw = ImageDraw.Draw(im)
             x, y = (main_face.x, main_face.y - 20)
             draw.text((x, y), max_key, font=font, fill=(119, 85, 0))
             eye_drawn = np.array(im)
+    elif main_face:
+        im = Image.fromarray(eye_drawn)
+        font = ImageFont.truetype('font.otf', 20)
+        draw = ImageDraw.Draw(im)
+        x, y = (main_face.x, main_face.y - 20)
+        draw.text((x, y), emotion, font=font, fill=(119, 85, 0))
+        eye_drawn = np.array(im)
+
+    if tick == 5:
+        tick = 0
+
+    tick += 1
     cv2.imshow("Face", eye_drawn)  # 显示图像
 
     key = cv2.waitKey(10)
